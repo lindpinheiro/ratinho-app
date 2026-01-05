@@ -67,6 +67,12 @@ export const styles = StyleSheet.create({
     height: 56,
     paddingRight: 16,
   },
+  rightIcon: {
+    width: 48,
+    height: 56,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   inputLabel: {
     fontSize: 12,
     color: '#49454f',
