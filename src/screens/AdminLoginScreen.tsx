@@ -5,20 +5,20 @@ import { styles } from '../styles/styles';
 import { CustomInput } from '../components/CustomInput';
 import { LogoIllustration } from '../components/LogoIllustration';
 
-interface LoginScreenProps {
+interface AdminLoginScreenProps {
     onLogin: () => void;
-    onAdminAccess?: () => void;
+    onBack: () => void;
 }
 
-export default function LoginScreen({ onLogin, onAdminAccess }: LoginScreenProps) {
+export default function AdminLoginScreen({ onLogin, onBack }: AdminLoginScreenProps) {
     const [user, setUser] = useState('');
     const [password, setPassword] = useState('');
 
     const handleLogin = () => {
-        if (user === 'Pedro' && password === '123456') {
+        if (user === 'Junior' && password === '123456') {
             onLogin();
         } else {
-            Alert.alert('Erro de Acesso', 'Usuário ou senha incorretos, tente novamente.');
+            Alert.alert('Erro de Acesso', 'Usuário ou senha de administrador incorretos.');
         }
     };
 
@@ -37,10 +37,14 @@ export default function LoginScreen({ onLogin, onAdminAccess }: LoginScreenProps
 
                         <LogoIllustration />
 
+                        <Text style={{ color: 'white', fontSize: 20, fontWeight: 'bold', alignSelf: 'center', marginBottom: 20 }}>
+                            Acesso Administrativo
+                        </Text>
+
                         <View style={styles.formArea}>
 
                             <CustomInput
-                                label="usuário"
+                                label="usuário admin"
                                 value={user}
                                 onChangeText={setUser}
                                 iconName="person"
@@ -67,11 +71,11 @@ export default function LoginScreen({ onLogin, onAdminAccess }: LoginScreenProps
                                 <Text style={styles.loginButtonText}>Entrar</Text>
                             </TouchableOpacity>
 
-                        </View>
+                            <TouchableOpacity style={{ marginTop: 20, alignSelf: 'center' }} onPress={onBack}>
+                                <Text style={{ color: 'white', textDecorationLine: 'underline' }}>Voltar para Login de Aluno</Text>
+                            </TouchableOpacity>
 
-                        <TouchableOpacity style={styles.adminButton} onPress={onAdminAccess}>
-                            <Text style={styles.adminText}>Entrar como administrador</Text>
-                        </TouchableOpacity>
+                        </View>
 
                     </ScrollView>
                 </KeyboardAvoidingView>
