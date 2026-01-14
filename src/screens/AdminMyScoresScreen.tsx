@@ -1,18 +1,24 @@
 import React from 'react';
 import { View, Text, StatusBar, SafeAreaView, ScrollView, TextInput, TouchableOpacity, Image, Alert } from 'react-native';
+import { useScores } from '../context/ScoreContext';
 import { LinearGradient } from 'expo-linear-gradient';
 import { styles } from '../styles/styles';
 import { Ionicons } from '@expo/vector-icons';
 
+import { Score } from '../context/ScoreContext';
+
 interface AdminMyScoresScreenProps {
     onLogout?: () => void;
-    onEdit?: () => void;
+    onEdit?: (id: string) => void;
+    onScoreSelect?: (score: Score) => void;
 }
 
-export default function AdminMyScoresScreen({ onLogout, onEdit }: AdminMyScoresScreenProps) {
+export default function AdminMyScoresScreen({ onLogout, onEdit, onScoreSelect }: AdminMyScoresScreenProps) {
+
+    const { scores, deleteScore } = useScores();
 
     // Function to handle delete confirmation
-    const handleDelete = (title: string) => {
+    const handleDelete = (id: string) => {
         Alert.alert(
             "Excluir Partitura",
             "Você deseja realmente excluir essa partitura?",
@@ -23,7 +29,7 @@ export default function AdminMyScoresScreen({ onLogout, onEdit }: AdminMyScoresS
                 },
                 {
                     text: "Sim",
-                    onPress: () => console.log(`Deleted ${title}`),
+                    onPress: () => deleteScore(id),
                     style: 'destructive'
                 }
             ]
@@ -77,7 +83,13 @@ export default function AdminMyScoresScreen({ onLogout, onEdit }: AdminMyScoresS
                 <View style={{ flexDirection: 'row', marginBottom: 20 }}>
                     <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ overflow: 'visible' }}>
                         {/* Card 1 */}
-                        <View style={styles.recentCard}>
+                        <TouchableOpacity
+                            style={styles.recentCard}
+                            onPress={() => {
+                                const score = scores.find(s => s.title === 'Em Busca da Minha Sorte');
+                                if (score && onScoreSelect) onScoreSelect(score);
+                            }}
+                        >
                             <View>
                                 <View style={styles.iconBox}>
                                     <Ionicons name="musical-note" size={24} color="white" />
@@ -88,10 +100,16 @@ export default function AdminMyScoresScreen({ onLogout, onEdit }: AdminMyScoresS
                             <View style={styles.pillButton}>
                                 <Text style={styles.pillText}>Com anotações</Text>
                             </View>
-                        </View>
+                        </TouchableOpacity>
 
                         {/* Card 2 */}
-                        <View style={styles.recentCard}>
+                        <TouchableOpacity
+                            style={styles.recentCard}
+                            onPress={() => {
+                                const score = scores.find(s => s.title === 'Asa Branca');
+                                if (score && onScoreSelect) onScoreSelect(score);
+                            }}
+                        >
                             <View>
                                 <View style={styles.iconBox}>
                                     <Ionicons name="musical-note" size={24} color="white" />
@@ -99,7 +117,7 @@ export default function AdminMyScoresScreen({ onLogout, onEdit }: AdminMyScoresS
                                 <Text style={styles.cardTitle} numberOfLines={1}>Asa Branca</Text>
                                 <Text style={styles.cardSubtitle}>Ontem</Text>
                             </View>
-                        </View>
+                        </TouchableOpacity>
                     </ScrollView>
                 </View>
 
@@ -112,100 +130,38 @@ export default function AdminMyScoresScreen({ onLogout, onEdit }: AdminMyScoresS
                 </View>
 
                 {/* List Item 1 */}
-                <View style={styles.listItemCard}>
-                    <View style={styles.listIconBox}>
-                        <Ionicons name="musical-note" size={24} color="white" />
-                    </View>
-                    <View style={styles.listContent}>
-                        <Text style={styles.cardTitle}>Em Busca da Minha Sorte</Text>
-                        <Text style={styles.cardSubtitle}>Por Tradicional</Text>
-                        <View style={styles.tagsContainer}>
-                            <View style={[styles.tag, { backgroundColor: '#E3F2FD' }]}>
-                                <Text style={[styles.tagText, { color: '#1976D2' }]}>Violão</Text>
+                {/* List Item - Dynamic */}
+                {scores.map((score) => (
+                    <View key={score.id} style={styles.listItemCard}>
+                        <TouchableOpacity style={{ flex: 1, flexDirection: 'row', alignItems: 'center' }} onPress={() => onScoreSelect && onScoreSelect(score)}>
+                            <View style={styles.listIconBox}>
+                                <Ionicons name="musical-note" size={24} color="white" />
                             </View>
-                            <View style={[styles.tag, { backgroundColor: '#E3F2FD' }]}>
-                                <Text style={[styles.tagText, { color: '#1976D2' }]}>Intermediário</Text>
+                            <View style={styles.listContent}>
+                                <Text style={styles.cardTitle}>{score.title}</Text>
+                                <Text style={styles.cardSubtitle}>Por {score.author}</Text>
+                                <View style={styles.tagsContainer}>
+                                    {score.tags.map((tag, index) => (
+                                        <View key={index} style={[styles.tag, { backgroundColor: index % 2 === 0 ? '#E3F2FD' : '#E8F5E9' }]}>
+                                            <Text style={[styles.tagText, { color: index % 2 === 0 ? '#1976D2' : '#388E3C' }]}>{tag}</Text>
+                                        </View>
+                                    ))}
+                                </View>
+                                <Text style={styles.timeText}><Ionicons name="time-outline" size={12} /> {score.duration}</Text>
                             </View>
-                            <View style={[styles.tag, { backgroundColor: '#F3E5F5' }]}>
-                                <Text style={[styles.tagText, { color: '#7B1FA2' }]}>Anotações</Text>
-                            </View>
+                        </TouchableOpacity>
+
+                        {/* Action Buttons */}
+                        <View style={styles.actionButtonsContainer}>
+                            <TouchableOpacity style={[styles.actionButton, styles.editButton]} onPress={() => onEdit && onEdit(score.id)}>
+                                <Ionicons name="pencil" size={16} color="#1976D2" />
+                            </TouchableOpacity>
+                            <TouchableOpacity style={[styles.actionButton, styles.deleteButton]} onPress={() => handleDelete(score.id)}>
+                                <Ionicons name="trash" size={16} color="#D32F2F" />
+                            </TouchableOpacity>
                         </View>
-                        <Text style={styles.timeText}><Ionicons name="time-outline" size={12} /> 45min</Text>
                     </View>
-
-                    {/* Action Buttons */}
-                    <View style={styles.actionButtonsContainer}>
-                        <TouchableOpacity style={[styles.actionButton, styles.editButton]} onPress={onEdit}>
-                            <Ionicons name="pencil" size={16} color="#1976D2" />
-                        </TouchableOpacity>
-                        <TouchableOpacity style={[styles.actionButton, styles.deleteButton]} onPress={() => handleDelete("Em Busca da Minha Sorte")}>
-                            <Ionicons name="trash" size={16} color="#D32F2F" />
-                        </TouchableOpacity>
-                    </View>
-                </View>
-
-                {/* List Item 2 */}
-                <View style={styles.listItemCard}>
-                    <View style={styles.listIconBox}>
-                        <Ionicons name="musical-note" size={24} color="white" />
-                    </View>
-                    <View style={styles.listContent}>
-                        <Text style={styles.cardTitle}>Asa Branca</Text>
-                        <Text style={styles.cardSubtitle}>Por Luiz Gonzaga</Text>
-                        <View style={styles.tagsContainer}>
-                            <View style={[styles.tag, { backgroundColor: '#E3F2FD' }]}>
-                                <Text style={[styles.tagText, { color: '#1976D2' }]}>Trompete</Text>
-                            </View>
-                            <View style={[styles.tag, { backgroundColor: '#E8F5E9' }]}>
-                                <Text style={[styles.tagText, { color: '#388E3C' }]}>Básico</Text>
-                            </View>
-                        </View>
-                        <Text style={styles.timeText}><Ionicons name="time-outline" size={12} /> 30min</Text>
-                    </View>
-
-                    {/* Action Buttons */}
-                    <View style={styles.actionButtonsContainer}>
-                        <TouchableOpacity style={[styles.actionButton, styles.editButton]} onPress={onEdit}>
-                            <Ionicons name="pencil" size={16} color="#1976D2" />
-                        </TouchableOpacity>
-                        <TouchableOpacity style={[styles.actionButton, styles.deleteButton]} onPress={() => handleDelete("Asa Branca")}>
-                            <Ionicons name="trash" size={16} color="#D32F2F" />
-                        </TouchableOpacity>
-                    </View>
-                </View>
-
-                {/* List Item 3 */}
-                <View style={styles.listItemCard}>
-                    <View style={styles.listIconBox}>
-                        <Ionicons name="musical-note" size={24} color="white" />
-                    </View>
-                    <View style={styles.listContent}>
-                        <Text style={styles.cardTitle}>Escala Maior Dó</Text>
-                        <Text style={styles.cardSubtitle}>Por Método</Text>
-                        <View style={styles.tagsContainer}>
-                            <View style={[styles.tag, { backgroundColor: '#E3F2FD' }]}>
-                                <Text style={[styles.tagText, { color: '#1976D2' }]}>Piano</Text>
-                            </View>
-                            <View style={[styles.tag, { backgroundColor: '#E8F5E9' }]}>
-                                <Text style={[styles.tagText, { color: '#388E3C' }]}>Básico</Text>
-                            </View>
-                            <View style={[styles.tag, { backgroundColor: '#F3E5F5' }]}>
-                                <Text style={[styles.tagText, { color: '#7B1FA2' }]}>Anotações</Text>
-                            </View>
-                        </View>
-                        <Text style={styles.timeText}><Ionicons name="time-outline" size={12} /> 20min</Text>
-                    </View>
-
-                    {/* Action Buttons */}
-                    <View style={styles.actionButtonsContainer}>
-                        <TouchableOpacity style={[styles.actionButton, styles.editButton]} onPress={onEdit}>
-                            <Ionicons name="pencil" size={16} color="#1976D2" />
-                        </TouchableOpacity>
-                        <TouchableOpacity style={[styles.actionButton, styles.deleteButton]} onPress={() => handleDelete("Escala Maior Dó")}>
-                            <Ionicons name="trash" size={16} color="#D32F2F" />
-                        </TouchableOpacity>
-                    </View>
-                </View>
+                ))}
 
                 <TouchableOpacity style={[styles.bottomLogoutButton, { marginTop: 20 }]} onPress={onLogout}>
                     <Ionicons name="log-out-outline" size={24} color="#002259" />

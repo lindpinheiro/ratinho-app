@@ -1,46 +1,43 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, SafeAreaView, StatusBar, Image } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, SafeAreaView, StatusBar, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { styles } from '../styles/styles';
-
 import { useScores } from '../context/ScoreContext';
 
-interface EditScoreScreenProps {
-    scoreId: string;
-    onCancel: () => void;
-    onSave: () => void;
+interface AdminAddScoreScreenProps {
+    onCancel?: () => void;
+    onSaveSuccess: () => void;
 }
 
-export default function EditScoreScreen({ scoreId, onCancel, onSave }: EditScoreScreenProps) {
-    const { scores, updateScore } = useScores();
-    const scoreToEdit = scores.find(s => s.id === scoreId);
+export default function AdminAddScoreScreen({ onCancel, onSaveSuccess }: AdminAddScoreScreenProps) {
+    const { addScore } = useScores();
 
-    const [difficulty, setDifficulty] = useState<'Básico' | 'Intermediário' | 'Avançado'>(scoreToEdit?.level || 'Intermediário');
-    const [title, setTitle] = useState(scoreToEdit?.title || '');
-    const [author, setAuthor] = useState(scoreToEdit?.author || '');
-    const [instrument, setInstrument] = useState(scoreToEdit?.instrument || '');
-
-    // Reset state when scoreId changes (optional but good practice)
-    React.useEffect(() => {
-        if (scoreToEdit) {
-            setTitle(scoreToEdit.title);
-            setAuthor(scoreToEdit.author);
-            setInstrument(scoreToEdit.instrument);
-            setDifficulty(scoreToEdit.level);
-        }
-    }, [scoreToEdit]);
+    const [title, setTitle] = useState('');
+    const [instrument, setInstrument] = useState('');
+    const [difficulty, setDifficulty] = useState('Básico'); // Default
+    const [author, setAuthor] = useState('');
+    // For now we don't handle actual file upload logic, just UI
 
     const handleSave = () => {
-        if (scoreToEdit) {
-            updateScore(scoreId, {
-                title,
-                author,
-                instrument,
-                level: difficulty as 'Básico' | 'Intermediário' | 'Avançado',
-                lastEdited: 'Hoje'
-            });
-            onSave();
+        if (!title || !instrument || !author) {
+            Alert.alert("Campos Obrigatórios", "Por favor, preencha todos os campos obrigatórios (*).");
+            return;
         }
+
+        addScore({
+            title,
+            instrument,
+            author,
+            level: difficulty as 'Básico' | 'Intermediário' | 'Avançado',
+            duration: '0min', // Default
+            tags: [instrument, difficulty], // Auto-generate tags
+            hasAnnotations: false,
+            lastEdited: 'Hoje'
+        });
+
+        Alert.alert("Sucesso", "Partitura cadastrada com sucesso!", [
+            { text: "OK", onPress: onSaveSuccess }
+        ]);
     };
 
     return (
@@ -49,12 +46,14 @@ export default function EditScoreScreen({ scoreId, onCancel, onSave }: EditScore
 
             {/* Header */}
             <View style={styles.editHeader}>
-                <TouchableOpacity style={styles.backButton} onPress={onCancel}>
-                    <Ionicons name="arrow-back" size={24} color="white" />
-                </TouchableOpacity>
+                {onCancel && (
+                    <TouchableOpacity style={styles.backButton} onPress={onCancel}>
+                        <Ionicons name="arrow-back" size={24} color="white" />
+                    </TouchableOpacity>
+                )}
                 <View>
-                    <Text style={styles.editHeaderTitle}>Editar Partitura</Text>
-                    <Text style={styles.editHeaderSubtitle}>Atualize as informações da partitura</Text>
+                    <Text style={styles.editHeaderTitle}>Cadastrar Partitura</Text>
+                    <Text style={styles.editHeaderSubtitle}>Adicione uma nova partitura ao acervo</Text>
                 </View>
             </View>
 
@@ -74,6 +73,7 @@ export default function EditScoreScreen({ scoreId, onCancel, onSave }: EditScore
                     <Text style={[styles.formLabel, { marginTop: 0 }]}>Título da Partitura<Text style={styles.requiredMark}>*</Text></Text>
                     <TextInput
                         style={styles.formInput}
+                        placeholder="Ex: Asa Branca"
                         value={title}
                         onChangeText={setTitle}
                     />
@@ -81,6 +81,7 @@ export default function EditScoreScreen({ scoreId, onCancel, onSave }: EditScore
                     <Text style={styles.formLabel}>Instrumento<Text style={styles.requiredMark}>*</Text></Text>
                     <TextInput
                         style={styles.formInput}
+                        placeholder="Ex: Violão"
                         value={instrument}
                         onChangeText={setInstrument}
                     />
@@ -101,13 +102,12 @@ export default function EditScoreScreen({ scoreId, onCancel, onSave }: EditScore
                     <Text style={styles.formLabel}>Autor/Compositor<Text style={styles.requiredMark}>*</Text></Text>
                     <TextInput
                         style={styles.formInput}
+                        placeholder="Ex: Luiz Gonzaga"
                         value={author}
                         onChangeText={setAuthor}
                     />
 
-                    <Text style={styles.formLabel}>Arquivo da Partitura</Text>
-                    <Text style={{ fontSize: 10, color: '#999', marginBottom: 8 }}>(opcional - deixe em branco para manter o arquivo atual)</Text>
-
+                    <Text style={styles.formLabel}>Arquivo da Partitura<Text style={styles.requiredMark}>*</Text></Text>
                     <TouchableOpacity style={styles.uploadContainer}>
                         <View style={{ backgroundColor: '#E0E0E0', padding: 8, borderRadius: 20, marginBottom: 4 }}>
                             <Ionicons name="cloud-upload-outline" size={20} color="#666" />
@@ -123,7 +123,7 @@ export default function EditScoreScreen({ scoreId, onCancel, onSave }: EditScore
 
                         <TouchableOpacity style={styles.updateButton} onPress={handleSave}>
                             <Ionicons name="save-outline" size={20} color="white" />
-                            <Text style={styles.updateButtonText}>Atualizar Partitura</Text>
+                            <Text style={styles.updateButtonText}>Salvar Partitura</Text>
                         </TouchableOpacity>
                     </View>
 

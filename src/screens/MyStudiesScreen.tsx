@@ -3,13 +3,19 @@ import { View, Text, ScrollView, TouchableOpacity, TextInput, StatusBar, SafeAre
 import { LinearGradient } from 'expo-linear-gradient';
 import { styles } from '../styles/styles';
 import { Ionicons } from '@expo/vector-icons'; // Make sure to install or use available icons
-import { LogoIllustration } from '../components/LogoIllustration'; // Reusing logo if needed, or just icon
+import { LogoIllustration } from '../components/LogoIllustration';
+import { useScores } from '../context/ScoreContext';
+
+import { Score } from '../context/ScoreContext';
 
 interface MyStudiesScreenProps {
     onLogout: () => void;
+    onScoreSelect?: (score: Score) => void;
 }
 
-export default function MyStudiesScreen({ onLogout }: MyStudiesScreenProps) {
+export default function MyStudiesScreen({ onLogout, onScoreSelect }: MyStudiesScreenProps) {
+    const { scores } = useScores();
+
     return (
         <View style={[styles.safeArea, styles.myStudiesContainer]}>
             <StatusBar barStyle="light-content" />
@@ -58,7 +64,13 @@ export default function MyStudiesScreen({ onLogout }: MyStudiesScreenProps) {
                     </View>
                     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.recentContainer}>
                         {/* Card 1 */}
-                        <TouchableOpacity style={styles.recentCard}>
+                        <TouchableOpacity
+                            style={styles.recentCard}
+                            onPress={() => {
+                                const score = scores.find(s => s.title === 'Em Busca da Minha Sorte');
+                                if (score && onScoreSelect) onScoreSelect(score);
+                            }}
+                        >
                             <View>
                                 <View style={styles.iconBox}>
                                     <Ionicons name="musical-note" size={24} color="white" />
@@ -72,7 +84,13 @@ export default function MyStudiesScreen({ onLogout }: MyStudiesScreenProps) {
                         </TouchableOpacity>
 
                         {/* Card 2 */}
-                        <TouchableOpacity style={styles.recentCard}>
+                        <TouchableOpacity
+                            style={styles.recentCard}
+                            onPress={() => {
+                                const score = scores.find(s => s.title === 'Asa Branca');
+                                if (score && onScoreSelect) onScoreSelect(score);
+                            }}
+                        >
                             <View>
                                 <View style={styles.iconBox}>
                                     <Ionicons name="musical-note" size={24} color="white" />
@@ -81,8 +99,15 @@ export default function MyStudiesScreen({ onLogout }: MyStudiesScreenProps) {
                                 <Text style={styles.cardSubtitle}>Ontem</Text>
                             </View>
                         </TouchableOpacity>
+
                         {/* Card 3 */}
-                        <TouchableOpacity style={styles.recentCard}>
+                        <TouchableOpacity
+                            style={styles.recentCard}
+                            onPress={() => {
+                                const score = scores.find(s => s.title === 'Parabéns pra Você');
+                                if (score && onScoreSelect) onScoreSelect(score);
+                            }}
+                        >
                             <View>
                                 <View style={styles.iconBox}>
                                     <Ionicons name="musical-note" size={24} color="white" />
@@ -102,64 +127,26 @@ export default function MyStudiesScreen({ onLogout }: MyStudiesScreenProps) {
                         <Text style={{ color: '#002259', fontSize: 18, fontWeight: 'bold' }}>Todas as Partituras</Text>
                     </View>
 
-                    {/* List Item 1 */}
-                    <TouchableOpacity style={styles.listItemCard}>
-                        <View style={styles.listIconBox}>
-                            <Ionicons name="musical-notes" size={24} color="white" />
-                        </View>
-                        <View style={styles.listContent}>
-                            <Text style={styles.cardTitle}>Em Busca da Minha Sorte</Text>
-                            <Text style={styles.cardSubtitle}>Por Tradicional</Text>
-                            <View style={styles.tagsContainer}>
-                                <View style={[styles.tag, { backgroundColor: '#E3F2FD' }]}>
-                                    <Text style={[styles.tagText, { color: '#1565C0' }]}>Violão</Text>
-                                </View>
-                                <View style={[styles.tag, { backgroundColor: '#E8F5E9' }]}>
-                                    <Text style={[styles.tagText, { color: '#2E7D32' }]}>Intermediário</Text>
-                                </View>
-                                <View style={[styles.tag, { backgroundColor: '#F3E5F5' }]}>
-                                    <Text style={[styles.tagText, { color: '#7B1FA2' }]}>Anotações</Text>
-                                </View>
+                    {/* List Item - Dynamic */}
+                    {scores.map((score) => (
+                        <TouchableOpacity key={score.id} style={styles.listItemCard} onPress={() => onScoreSelect && onScoreSelect(score)}>
+                            <View style={styles.listIconBox}>
+                                <Ionicons name="musical-notes" size={24} color="white" />
                             </View>
-                            <Text style={styles.timeText}><Ionicons name="time-outline" size={12} /> 45min</Text>
-                        </View>
-                    </TouchableOpacity>
-
-                    {/* List Item 2 */}
-                    <TouchableOpacity style={styles.listItemCard}>
-                        <View style={styles.listIconBox}>
-                            <Ionicons name="musical-notes" size={24} color="white" />
-                        </View>
-                        <View style={styles.listContent}>
-                            <Text style={styles.cardTitle}>Asa Branca</Text>
-                            <Text style={styles.cardSubtitle}>Por Luiz Gonzaga</Text>
-                            <View style={styles.tagsContainer}>
-                                <View style={[styles.tag, { backgroundColor: '#E3F2FD' }]}>
-                                    <Text style={[styles.tagText, { color: '#1565C0' }]}>Trompete</Text>
+                            <View style={styles.listContent}>
+                                <Text style={styles.cardTitle}>{score.title}</Text>
+                                <Text style={styles.cardSubtitle}>Por {score.author}</Text>
+                                <View style={styles.tagsContainer}>
+                                    {score.tags.map((tag, index) => (
+                                        <View key={index} style={[styles.tag, { backgroundColor: index % 2 === 0 ? '#E3F2FD' : '#E8F5E9' }]}>
+                                            <Text style={[styles.tagText, { color: index % 2 === 0 ? '#1565C0' : '#2E7D32' }]}>{tag}</Text>
+                                        </View>
+                                    ))}
                                 </View>
-                                <View style={[styles.tag, { backgroundColor: '#E8F5E9' }]}>
-                                    <Text style={[styles.tagText, { color: '#2E7D32' }]}>Básico</Text>
-                                </View>
+                                <Text style={styles.timeText}><Ionicons name="time-outline" size={12} /> {score.duration}</Text>
                             </View>
-                            <Text style={styles.timeText}><Ionicons name="time-outline" size={12} /> 30min</Text>
-                        </View>
-                    </TouchableOpacity>
-
-                    {/* List Item 3 */}
-                    <TouchableOpacity style={styles.listItemCard}>
-                        <View style={styles.listIconBox}>
-                            <Ionicons name="musical-notes" size={24} color="white" />
-                        </View>
-                        <View style={styles.listContent}>
-                            <Text style={styles.cardTitle}>Escala Maior Dó</Text>
-                            <Text style={styles.cardSubtitle}>Por Método</Text>
-                            <View style={styles.tagsContainer}>
-                                <View style={[styles.tag, { backgroundColor: '#FFF3E0' }]}>
-                                    <Text style={[styles.tagText, { color: '#E65100' }]}>Teoria</Text>
-                                </View>
-                            </View>
-                        </View>
-                    </TouchableOpacity>
+                        </TouchableOpacity>
+                    ))}
 
                     {/* Exit Button at Bottom */}
                     <TouchableOpacity style={styles.bottomLogoutButton} onPress={onLogout}>
